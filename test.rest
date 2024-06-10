@@ -1,0 +1,28 @@
+### DELETE request to delete a person with id 1
+DELETE http://localhost:3001/api/persons/3
+
+###
+
+### GET request to fetch a person with id 2
+GET http://localhost:3001/api/persons/2
+
+###
+
+### GET request to fetch info
+GET http://localhost:3001/info
+
+###
+
+### GET request to fetch all persons
+GET http://localhost:3001/api/persons/
+
+###
+
+### POST request to add a new person
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name": "",
+    "number": "+3687456123"
+}
