@@ -7,7 +7,8 @@ require('dotenv').config()
 const { Person } = require("./models/person")
 
 app.use(cors());
-app.use(express.static('dist'))
+app.use(express.static('dist'));
+
 morgan.token("post-data", function (req, res) {
     if (req.method === "POST") {
         const { name, number } = req.body;
@@ -52,10 +53,7 @@ app.get("/api/persons", (req, res) => {
         .then(persons => {
             res.json(persons);
         })
-        .catch(error => {
-            console.error("Error fetching persons", error);
-            res.status(500).end();
-        })
+        .catch(error => next(error));
 });
 
 app.get("/info", (req, res) => {
@@ -65,10 +63,7 @@ app.get("/info", (req, res) => {
             const info = `<p>PhoneBook has info for ${count} people</p><p>${currentDate}</p>`;
             res.send(info);
         })
-        .catch(error => {
-            console.error("Error fetching info:", error);
-            res.status(500).end();
-        });
+        .catch(error => next(error));
 });
 
 app.get("/api/persons/:id", (req, res) => {
@@ -81,10 +76,7 @@ app.get("/api/persons/:id", (req, res) => {
                 res.status(404).send({ error: "Person not found" })
             }
         })
-        .catch(error => {
-            console.error("Error fetching person", error);
-            res.status(500).end();
-        })
+        .catch(error => next(error))
 });
 
 
@@ -99,10 +91,7 @@ app.delete("/api/persons/:id", (req, res) => {
                 res.status(404).send({ error: "Person not found" });
             }
         })
-        .catch(error => {
-            console.error("Error deleting person:", error);
-            res.status(500).end();
-        });
+        .catch(error => next(error))
 });
 
 app.post("/api/persons", (req, res) => {
@@ -126,16 +115,30 @@ app.post("/api/persons", (req, res) => {
                     .then(savedPerson => {
                         res.json(savedPerson);
                     })
-                    .catch(error => {
-                        console.error('Error saving person:', error);
-                        res.status(500).end();
-                    });
+                    .catch(error => next(error))
             }
         })
-        .catch(error => {
-            console.error('Error checking existing person:', error);
-            res.status(500).end();
-        });
+        .catch(error => next(error))
+});
+
+app.put("/api/persons/:id", (req, res, next) => {
+    const id = req.params.id;
+    const body = req.body;
+    if (!body.number) {
+        return res.status(400).json({ error: "Number is missing" });
+    };
+    const updatedPerson = {
+        number: body.number,
+    };
+    Person.findByIdAndUpdate(id, updatedPerson, { new: true, runValidators: true, context: "query" })
+        .then(updatedPerson => {
+            if (updatedPerson) {
+                res.json(updatedPerson);
+            } else {
+                res.status(404).send({ error: "Person not found" });
+            }
+        })
+        .catch(error => next(error));
 });
 
 const errorHandler = (error, req, res, next) => {
@@ -146,6 +149,7 @@ const errorHandler = (error, req, res, next) => {
     if (error.name === "ResourceNotFoundError") {
         return res.status(404).json({ error: error.message });
     }
+    res.status(500).json({ error: "An unexpected error ocurred" });
     next(error);
 }
 
