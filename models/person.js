@@ -12,13 +12,20 @@ mongoose.connect(url)
         console.log("Error connecting to MongoDB", error.message);
     });
 
-const Person = mongoose.model("Person", {
+const personSchema = new mongoose.Schema({
     name: String,
     number: String,
 });
 
+personSchema.set("toJSON", {
+    transform: (document, returnedObject) => {
+        returnedObject.id = returnedObject._id.toString()
+        delete returnedObject._id
+        delete returnedObject.__v
+    }
+})
 
-
+const Person = mongoose.model("Person",personSchema)
 
 
 if (process.argv.length < 3) {
@@ -32,10 +39,10 @@ if (process.argv.length === 3) {
         persons.forEach(person => {
             console.log(`${person.name} ${person.number}`);
         });
-        mongoose.connection.close();
+
     }).catch(error => {
         console.error('Error fetching phonebook:', error);
-        mongoose.connection.close();
+
     });
 }
 
@@ -54,12 +61,13 @@ const person = new Person({
     number: number,
 });
 
+    
 
 person.save().then(result => {
-    console.log(`added ${name} number ${number} to phonebook`);
-    mongoose.connection.close();
+    console.log(`added ${name} number ${number} to phonebook`)
 }).catch(error => {
-    console.error('Error saving person:', error);
-    mongoose.connection.close();
+    console.error('Error saving person:', error)
 });
 }
+
+module.exports = { Person, personSchema };

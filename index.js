@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 require('dotenv').config()
 
-const Person = require("./models/person")
+const { Person } = require("./models/person")
 
 app.use(cors());
 app.use(express.static('dist'))
@@ -62,7 +62,7 @@ app.get("/info", (req, res) => {
     Person.countDocuments({})
         .then(count => {
             const currentDate = new Date();
-            const info = `<p>PhoneBook has info for ${persons.length} people</p><p>${currentDate}</p>`;
+            const info = `<p>PhoneBook has info for ${count} people</p><p>${currentDate}</p>`;
             res.send(info);
         })
         .catch(error => {
@@ -89,8 +89,8 @@ app.get("/api/persons/:id", (req, res) => {
 
 
 app.delete("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id);
-    Person.findByIdAndRemove(id)
+    const id = req.params.id;
+    Person.findByIdAndDelete(id)
         .then(result => {
             if (result) {
                 res.status(204).end();
