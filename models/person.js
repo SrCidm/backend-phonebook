@@ -1,15 +1,25 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const url = process.env.MONGO_URI;
+
+mongoose.set('strictQuery', false);
+mongoose.connect(url)
+    .then(() => {
+        console.log("Connected to  MongoDB");
+    })
+    .catch((error) => {
+        console.log("Error connecting to MongoDB", error.message);
+    });
+
 const Person = mongoose.model("Person", {
     name: String,
     number: String,
 });
 
-const url = process.env.MONGO_URI;
 
-mongoose.set('strictQuery', false);
-mongoose.connect(url);
+
+
 
 if (process.argv.length < 3) {
   console.log('Please provide the password as an argument');

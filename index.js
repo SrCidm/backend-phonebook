@@ -48,59 +48,95 @@ app.get("/", (req, res) => {
     res.send("<h1>PhoneBook-BackEnd<h1>")
 })
 app.get("/api/persons", (req, res) => {
-    res.json(persons);
+    Person.find({})
+        .then(persons => {
+            res.json(persons);
+        })
+        .catch(error => {
+            console.error("Error fetching persons", error);
+            res.status(500).end();
+        })
 });
 
 app.get("/info", (req, res) => {
-    const currentDate = new Date();
-    const info = `<p>PhoneBook has info for ${persons.length} people</p><p>${currentDate}</p>`;
-    res.send(info);
-})
+    Person.countDocuments({})
+        .then(count => {
+            const currentDate = new Date();
+            const info = `<p>PhoneBook has info for ${persons.length} people</p><p>${currentDate}</p>`;
+            res.send(info);
+        })
+        .catch(error => {
+            console.error("Error fetching info:", error);
+            res.status(500).end();
+        });
+});
 
 app.get("/api/persons/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const person = persons.find(person => person.id === id);
-
-    if (person) {
-        res.json(person);
-    } else {
-        res.status(404).send({ error: "Person not found" })
-    }
+    const id = req.params.id;
+    Person.findById(id)
+        .then(person => {
+            if (person) {
+                res.json(person);
+            } else {
+                res.status(404).send({ error: "Person not found" })
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching person", error);
+            res.status(500).end();
+        })
 });
+
 
 app.delete("/api/persons/:id", (req, res) => {
     const id = Number(req.params.id);
-    const initialLength = persons.length;
-    persons = persons.filter(person => person.id !== id);
-
-    if (persons.length < initialLength) {
-        res.status(204).end();
-        console.log("Person deleted")
-    } else {
-        res.status(404).send({ error: "Person not found" });
-    }
+    Person.findByIdAndRemove(id)
+        .then(result => {
+            if (result) {
+                res.status(204).end();
+                console.log("Person deleted");
+            } else {
+                res.status(404).send({ error: "Person not found" });
+            }
+        })
+        .catch(error => {
+            console.error("Error deleting person:", error);
+            res.status(500).end();
+        });
 });
 
 app.post("/api/persons", (req, res) => {
-    console.log(req.body)
-    const body = req.body
+    const body = req.body;
+
     if (!body.name || !body.number) {
-        return res.status(400).json({error: "Name or number is missing"})
+        return res.status(400).json({ error: "Name or number is missing" });
     }
 
-    const nameExists = persons.some(person => person.name === body.name);
-    if (nameExists) {
-        return res.status(400).json({ error: "Name must be unique" });
-    }
-    const newPerson = {
-        id: Math.floor(Math.random() * 100000),
-        name: body.name,
-        number: body.number,
-    };
-    persons = persons.concat(newPerson);
-    res.json(newPerson);
-    console.log("Person added:", newPerson)
-})
+    Person.findOne({ name: body.name })
+        .then(existingPerson => {
+            if (existingPerson) {
+                return res.status(400).json({ error: "Name must be unique" });
+            } else {
+                const person = new Person({
+                    name: body.name,
+                    number: body.number,
+                });
+
+                person.save()
+                    .then(savedPerson => {
+                        res.json(savedPerson);
+                    })
+                    .catch(error => {
+                        console.error('Error saving person:', error);
+                        res.status(500).end();
+                    });
+            }
+        })
+        .catch(error => {
+            console.error('Error checking existing person:', error);
+            res.status(500).end();
+        });
+});
 
 const errorHandler = (error, req, res, next) => {
     console.error(error.message);
