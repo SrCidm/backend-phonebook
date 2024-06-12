@@ -100,6 +100,9 @@ app.post("/api/persons", (req, res) => {
     if (!body.name || !body.number) {
         return res.status(400).json({ error: "Name or number is missing" });
     }
+    if (!/^\d{2,3}-\d+$/.test(body.number)) {
+        return res.status(400).json({ error: "This is not a valid phone number. The format should be xx-xxxxxxx or xxx-xxxxxxx." });
+    }
 
     Person.findOne({ name: body.name })
         .then(existingPerson => {
