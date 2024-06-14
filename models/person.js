@@ -21,12 +21,11 @@ const personSchema = new mongoose.Schema({
   number: {
     type: String,
     required: true,
-    minLength: 8,
     validate: {
       validator: function (v) {
-        return /^\d{2,3}-\d+$/.test(v)
+        return /^\d{2,3}-\d+$/.test(v) && v.replace('-', '').length >= 8;
       },
-      message: props => `${props.value} This is not a valid phone number. The format should be xx-xxxxxxx or xxx-xxxxxxx.`
+      message: props => `${props.value} This is not a valid phone number. The format should be xx-xxxxxxx or xxx-xxxxxxx, and it should contain at least 8 digits.`
     }
   },
 })
