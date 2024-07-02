@@ -53,10 +53,3 @@ else if (process.argv.length === 5) {
     mongoose.connection.close()
   })
 }
-
-
-
-// const person = new Person({
-//   name: 'Sergio Wong',
-//   number: '+3487985543',
-// });
